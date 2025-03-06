@@ -40,11 +40,11 @@ jobs:
         if: always()
         run: |
           if grep -q '"issue_confidence": "MEDIUM"\|"issue_confidence": "HIGH"' bandit_report.json; then
-            echo "::error ::❌ Vulnerabilities found in Lambda Python files!"
+            echo "::error ::Vulnerabilities found in Lambda Python files! ❌ "
             cat bandit_report.json
-            exit 1  # ❌ Block PR if vulnerabilities exist
+            exit 1
           else
-            echo "::notice ::✅ No Medium or High vulnerabilities found!"
+            echo "::notice ::No vulnerabilities found! ✅"
           fi
     
 
