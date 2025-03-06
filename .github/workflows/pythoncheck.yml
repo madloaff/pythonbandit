@@ -3,14 +3,14 @@ name: Python Security Scan (Bandit)
 on:
   pull_request:
     branches:
-      - main
-      - develop
+      - test
+      - staging
     paths:
       - "lambda/**/*.py"  # Runs only if Python files in `lambda/` change
   push:
     branches:
-      - main
-      - develop
+      - test
+      - staging
     paths:
       - "lambda/**/*.py"
 
