@@ -4,7 +4,7 @@ import subprocess
 
 # Hardcoded credentials (BAD PRACTICE)
 USERNAME = "admin"
-PASSWORD = "123456"  # Vulnerability: Hardcoded password
+PASSWORD = "1234567"  # Vulnerability: Hardcoded password
 
 def insecure_hash(data):
     """Uses an insecure hashing algorithm (MD5)"""
