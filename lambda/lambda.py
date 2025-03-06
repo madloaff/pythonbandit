@@ -1,26 +1,18 @@
-import os
-import hashlib
-import subprocess
+def greet(name: str) -> str:
+    """Returns a greeting message."""
+    return f"Hello, {name}!"
 
-# Hardcoded credentials (BAD PRACTICE)
-USERNAME = "admin"
-PASSWORD = "123456"  # Vulnerability: Hardcoded password
+def add_numbers(a: int, b: int) -> int:
+    """Adds two numbers and returns the result."""
+    return a + b
 
-def insecure_hash(data):
-    """Uses an insecure hashing algorithm (MD5)"""
-    return hashlib.md5(data.encode()).hexdigest()  # Vulnerability: Weak hash function
+def main():
+    user_name = input("Enter your name: ")
+    print(greet(user_name))
 
-def run_command(user_input):
-    """Executes a shell command unsafely"""
-    command = f"echo {user_input}"  # Vulnerability: Potential command injection
-    return subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).communicate()[0]
+    num1 = int(input("Enter first number: "))
+    num2 = int(input("Enter second number: "))
+    print(f"The sum is: {add_numbers(num1, num2)}")
 
-# Testing the vulnerabilities
 if __name__ == "__main__":
-    print(f"User: {USERNAME}, Password: {PASSWORD}")
-    
-    hashed_password = insecure_hash(PASSWORD)
-    print(f"Insecure Hash: {hashed_password}")
-
-    user_input = input("Enter a command: ")
-    print(run_command(user_input))
+    main()
