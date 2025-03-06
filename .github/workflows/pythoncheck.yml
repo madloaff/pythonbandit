@@ -44,7 +44,6 @@ jobs:
             exit 1
           fi
 
-          # Extract vulnerability count safely
           VULNERABILITIES=$(jq '.metrics._totals.issues // 0' bandit_report.json)
 
           if [ "$VULNERABILITIES" -gt 0 ]; then
