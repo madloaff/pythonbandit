@@ -9,8 +9,8 @@ on:
       - "lambda/**/*.py" 
   push:
     branches:
-      - main
-      - develop
+      - staging
+      - test
     paths:
       - "lambda/**/*.py"
 
