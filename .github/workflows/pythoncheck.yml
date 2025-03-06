@@ -34,7 +34,7 @@ jobs:
       - name: Run Bandit Security Scan
         run: |
           echo "Running Bandit security scan on Python files inside lambda/..."
-          bandit -r lambda/ -ll -ii -f json -o bandit_report.json 
+          bandit -r lambda/ -ii -f json -o bandit_report.json 
 
       - name: Analyze Bandit Results
         if: always()
