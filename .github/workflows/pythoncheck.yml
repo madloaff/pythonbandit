@@ -3,10 +3,10 @@ name: Python Security Scan (Bandit)
 on:
   pull_request:
     branches:
-      - staging
-      - test
+      - main
+      - develop
     paths:
-      - "lambda/**/*.py" 
+      - "lambda/**/*.py"  # Runs only if Python files in `lambda/` change
   push:
     branches:
       - main
@@ -26,7 +26,10 @@ jobs:
       - name: Set up Latest Python Version
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.x'  # Automatically selects the latest Python 3 version
+
+      - name: Verify Python Version
+        run: python --version  # Logs the actual Python version used
 
       - name: Install Bandit & jq
         run: pip install --upgrade bandit jq
@@ -34,24 +37,23 @@ jobs:
       - name: Run Bandit Security Scan
         run: |
           echo "Running Bandit security scan on Python files inside lambda/..."
-          bandit -r lambda/ -f json -o bandit_report.json || true
-        continue-on-error: true
+          bandit -r lambda/ -f json -o bandit_report.json
+        continue-on-error: false  # Ensures Bandit fails if vulnerabilities are found
+
+      - name: Upload Bandit Report (Always)
+        if: always()  # Ensures the report is uploaded even if vulnerabilities are found
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-security-report
+          path: bandit_report.json
 
       - name: Analyze Bandit Results
         run: |
           VULNERABILITIES=$(jq '.metrics._totals.issues' bandit_report.json)
           if [ "$VULNERABILITIES" -gt 0 ]; then
             echo "::error ::Vulnerabilities found in Lambda Python files! Please review the report."
-            echo "Lambda Python file contain security vulnerabilities!"
-            cat bandit_report.json 
-            exit 1
+            echo "❌ Lambda Python files contain security vulnerabilities!"
+            cat bandit_report.json  # Print report to logs for visibility
+            exit 1  # Fail the workflow
           else
-            echo "No vulnerabilities found in Lambda Python files!"
-          fi
-
-      - name: Upload Bandit Report
-        if: always() 
-        uses: actions/upload-artifact@v4
-        with:
-          name: bandit-security-report
-          path: bandit_report.json
+            echo "✅ No vulnerabilities found in Lambda Python files!"
