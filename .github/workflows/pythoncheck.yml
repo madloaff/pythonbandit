@@ -9,8 +9,8 @@ on:
       - "lambda/**/*.py" 
   push:
     branches:
-      - main
-      - develop
+      - staging
+      - test
     paths:
       - "lambda/**/*.py"
 
@@ -34,23 +34,22 @@ jobs:
       - name: Run Bandit Security Scan
         run: |
           echo "Running Bandit security scan on Python files inside lambda/..."
-          bandit -r lambda/ -f json -o bandit_report.json || true
-        continue-on-error: true
+          bandit -r lambda/ -ii -f json -o bandit_report.json 
 
       - name: Analyze Bandit Results
+        if: always()
         run: |
-          VULNERABILITIES=$(jq '.metrics._totals.issues' bandit_report.json)
-          if [ "$VULNERABILITIES" -gt 0 ]; then
-            echo "::error ::Vulnerabilities found in Lambda Python files! Please review the report."
-            echo "Lambda Python file contain security vulnerabilities!"
-            cat bandit_report.json 
+          if grep -q '"issue_confidence": "MEDIUM"\|"issue_confidence": "HIGH"' bandit_report.json; then
+            echo "::error ::Vulnerabilities found in Lambda Python files! ❌ "
+            cat bandit_report.json
             exit 1
           else
-            echo "No vulnerabilities found in Lambda Python files!"
+            echo "::notice ::No vulnerabilities found! ✅"
           fi
+    
 
       - name: Upload Bandit Report
-        if: always() 
+        if: always()  
         uses: actions/upload-artifact@v4
         with:
           name: bandit-security-report
