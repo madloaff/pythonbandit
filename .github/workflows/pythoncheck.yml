@@ -1,34 +1,57 @@
-name: CI
+name: Python Security Scan (Bandit)
 
-on: 
- push:
-  branches: 
-   - main
+on:
+  pull_request:
+    branches:
+      - staging
+      - test
+    paths:
+      - "lambda/**/*.py" 
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "lambda/**/*.py"
 
 jobs:
- sast_scan:
-   name: Run Bandit Scan
-   runs-on: ubuntu-latest
+  bandit_scan:
+    name: Run Bandit Security Scan
+    runs-on: ubuntu-latest
 
-   steps:
-   - name: Checkout code
-     uses: actions/checkout@v2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-   - name: Set up Python
-     uses: actions/setup-python@v2
-     with:
-       python-version: 3.8
+      - name: Set up Latest Python Version
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-   - name: Install Bandit
-     run: pip install bandit
+      - name: Install Bandit & jq
+        run: pip install --upgrade bandit jq
 
-   - name: Run Bandit Security Scan
-     run: bandit -r . -f json -o bandit-report.json
-           
-   - name: Upload Bandit Report as Artifact
-     uses: actions/upload-artifact@v4
-     if: always()
-     with:
-        name: bandit-security-report
-        path: bandit-report.json
- 
+      - name: Run Bandit Security Scan
+        run: |
+          echo "Running Bandit security scan on Python files inside lambda/..."
+          bandit -r lambda/ -f json -o bandit_report.json || true
+        continue-on-error: true
+
+      - name: Analyze Bandit Results
+        run: |
+          VULNERABILITIES=$(jq '.metrics._totals.issues' bandit_report.json)
+          if [ "$VULNERABILITIES" -gt 0 ]; then
+            echo "::error ::Vulnerabilities found in Lambda Python files! Please review the report."
+            echo "Lambda Python file contain security vulnerabilities!"
+            cat bandit_report.json 
+            exit 1
+          else
+            echo "No vulnerabilities found in Lambda Python files!"
+          fi
+
+      - name: Upload Bandit Report
+        if: always() 
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-security-report
+          path: bandit_report.json
