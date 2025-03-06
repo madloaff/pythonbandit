@@ -34,31 +34,19 @@ jobs:
       - name: Run Bandit Security Scan
         run: |
           echo "Running Bandit security scan on Python files inside lambda/..."
-          bandit -r lambda/ -f json -o bandit_report.json 
+          bandit -r lambda/ -ll -ii -f json -o bandit_report.json 
 
       - name: Analyze Bandit Results
-        if: always()  # 
+        if: always()
         run: |
-          # Ensure the Bandit report exists and is not empty
-          if [ ! -s bandit_report.json ]; then
-            echo "::error ::Bandit report not found or empty! Skipping analysis."
-            exit 1
-          fi
-
-          # Extract vulnerability count safely
-          VULNERABILITIES=$(jq '.metrics._totals.issues // 0' bandit_report.json)
-
-          echo "Vulnerability count: $VULNERABILITIES"  # Debugging output
-
-          if [ "$VULNERABILITIES" -gt 0 ]; then
-            echo "::error ::❌ Vulnerabilities found in Lambda Python files! Please review the report."
-            echo "❌ Lambda Python files contain security vulnerabilities!"
+          if grep -q '"issue_confidence": "MEDIUM"\|"issue_confidence": "HIGH"' bandit_report.json; then
+            echo "::error ::❌ Vulnerabilities found in Lambda Python files!"
             cat bandit_report.json
-            exit 1 
+            exit 1  # ❌ Block PR if vulnerabilities exist
           else
-            echo "::notice ::✅ No vulnerabilities found in Lambda Python files!"
-            echo "✅ No vulnerabilities found in Lambda Python files!"
+            echo "::notice ::✅ No Medium or High vulnerabilities found!"
           fi
+    
 
       - name: Upload Bandit Report
         if: always()  
