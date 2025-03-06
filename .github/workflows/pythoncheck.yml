@@ -37,21 +37,26 @@ jobs:
           bandit -r lambda/ -f json -o bandit_report.json 
 
       - name: Analyze Bandit Results
-        if: always()
+        if: always()  # 
         run: |
-          if [ ! -f bandit_report.json ]; then
-            echo "::error ::Bandit report not found! Skipping analysis."
+          # Ensure the Bandit report exists and is not empty
+          if [ ! -s bandit_report.json ]; then
+            echo "::error ::Bandit report not found or empty! Skipping analysis."
             exit 1
           fi
 
+          # Extract vulnerability count safely
           VULNERABILITIES=$(jq '.metrics._totals.issues // 0' bandit_report.json)
 
+          echo "Vulnerability count: $VULNERABILITIES"  # Debugging output
+
           if [ "$VULNERABILITIES" -gt 0 ]; then
-            echo "::error ::Vulnerabilities found in Lambda Python files! Please review the report."
+            echo "::error ::❌ Vulnerabilities found in Lambda Python files! Please review the report."
             echo "❌ Lambda Python files contain security vulnerabilities!"
             cat bandit_report.json
-            exit 1  # Fail the workflow
+            exit 1 
           else
+            echo "::notice ::✅ No vulnerabilities found in Lambda Python files!"
             echo "✅ No vulnerabilities found in Lambda Python files!"
           fi
 
